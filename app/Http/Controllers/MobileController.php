@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\UserModel;
 use App\Models\SupplierModel;
 use App\Models\VoucherGenModel;
+use App\Models\CommodityModel;
 use App\Mail\OTPMail;
 use Mail;
 class MobileController extends Controller
@@ -18,11 +19,17 @@ class MobileController extends Controller
 
     private $user_model;
     private $vouchergen_model;
+    private $commodity_model;
 
-    public function __construct(UserModel $user_model, SupplierModel $supplier_model, VoucherGenModel $vouchergen_model){
+    public function __construct(UserModel $user_model, 
+                                SupplierModel $supplier_model, 
+                                VoucherGenModel $vouchergen_model, 
+                                CommodityModel $commodity_model
+                                ){
         $this->user_model = $user_model;    
         $this->supplier_model = $supplier_model;    
         $this->vouchergen_model = $vouchergen_model;    
+        $this->commodity_model = $commodity_model;    
     }
 
     public function index()
@@ -106,8 +113,7 @@ class MobileController extends Controller
             Mail::send('otp', ["otp_code"=>$random_password], function ($message) use ($to_email,$random_password){
                 $message->to($to_email)
                     ->subject('VMP Mobile OTP')                                                     
-                    ->from("webdeveloper01000@gmail.com");
-                  
+                    ->from("webdeveloper01000@gmail.com");                  
               });
 
             return json_encode(array(["Message"=>"true","OTP"=>$random_password]));
@@ -122,10 +128,16 @@ class MobileController extends Controller
     {
         //
 
-        $reference_num = request('reference_num');
+        // $reference_num = request('reference_num');
+        $reference_num = 'DA101A98TQVR6K4';
         
         $get_info = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->get();
         
+        // Compute the balance of voucher    
+        $get_voucher_amount = $this->vouchergen_model->where('REFERENCE_NO','DA566AB36L58O7M')->first()->AMOUNT;
+        $compute_commodities= $this->commodity_model->where('REFERENCE_NO','DA566AB36L58O7M')->sum('amount');
+        $check_balance = $get_voucher_amount - $compute_commodities;        
+        $get_info[0]['Available Balance'] = $check_balance;        
        if(!$get_info->isEmpty()){
             return json_encode(array(["Message"=>'true',"data"=>$get_info]));    
         }else{

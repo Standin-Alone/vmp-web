@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/api/sign_in','MobileController@sign_in');
 
 // QRCode Screen
-Route::post('/api/get_voucher_info','MobileController@get_voucher_info');
+Route::get('/api/get_voucher_info','MobileController@get_voucher_info');
 
 
 //  
