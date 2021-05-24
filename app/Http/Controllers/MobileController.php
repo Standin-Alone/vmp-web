@@ -8,6 +8,7 @@ use App\Models\SupplierModel;
 use App\Models\VoucherGenModel;
 use App\Models\CommodityModel;
 use App\Mail\OTPMail;
+use File;
 use Mail;
 class MobileController extends Controller
 {
@@ -116,7 +117,7 @@ class MobileController extends Controller
                     ->from("webdeveloper01000@gmail.com");                  
               });
 
-            return json_encode(array(["Message"=>"true","OTP"=>$random_password]));
+            return json_encode(array(["Message"=>"true","OTP"=>$random_password,"EMAIL"=>$to_email]));
         }else{
             return json_encode(array(["Message"=>"false"]));
         }
@@ -128,17 +129,17 @@ class MobileController extends Controller
     {
         //
 
-        // $reference_num = request('reference_num');
-        $reference_num = 'DA101A98TQVR6K4';
+        $reference_num = request('reference_num');        
         
         $get_info = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->get();
         
-        // Compute the balance of voucher    
-        $get_voucher_amount = $this->vouchergen_model->where('REFERENCE_NO','DA566AB36L58O7M')->first()->AMOUNT;
-        $compute_commodities= $this->commodity_model->where('REFERENCE_NO','DA566AB36L58O7M')->sum('amount');
-        $check_balance = $get_voucher_amount - $compute_commodities;        
-        $get_info[0]['Available Balance'] = $check_balance;        
+        
        if(!$get_info->isEmpty()){
+           // Compute the balance of voucher    
+            $get_voucher_amount = $this->vouchergen_model->where('REFERENCE_NO','DA566AB36L58O7M')->first()->AMOUNT;
+            $compute_commodities= $this->commodity_model->where('REFERENCE_NO','DA566AB36L58O7M')->sum('amount');
+            $check_balance = $get_voucher_amount - $compute_commodities;        
+            $get_info[0]['Available_Balance'] = $check_balance;        
             return json_encode(array(["Message"=>'true',"data"=>$get_info]));    
         }else{
             return json_encode(array(["Message"=>'false']));    
@@ -147,9 +148,57 @@ class MobileController extends Controller
     }
 
 
+
+     //  SUBMIT FUNCTION OF Claim Voucer
+     public function submit_voucher(){
+
+        $reference_num = request('reference_num');        
+        $images_count = request('images_count');        
+        $commodities = json_encode(request('commodities'));
+        $decode = json_decode($commodities,true);
+                
+
+        
+        // commodities
+        foreach($decode as $item){
+            $commodity = json_decode($item)->commodity;                        
+        }
+
+
+        // upload image
+        for($i = 0 ; $i < $images_count ; $i++){
+            $image = request()->input('image'.$i);
+            $image = str_replace('data:image/jpeg;base64,', '', $image);
+            $image = str_replace(' ', '+', $image);
+            $imageName = 'proof'.$reference_num .'-'.$i. '.jpeg';
+            File::put(storage_path(). '/uploads//' . $imageName, base64_decode($image));            
+        }
+        
+        
+
+        
+                        
+    }
+
     public function otp()
     {
         return view('otp');
+    }
+
+
+    public function resendOTP(){
+
+        $email = request('email');
+        $random_password = mt_rand(1000,9999);
+        
+        Mail::send('otp', ["otp_code"=>$random_password], function ($message) use ($email,$random_password){
+            $message->to($email)
+                ->subject('VMP Mobile OTP')                                                     
+                ->from("webdeveloper01000@gmail.com");                  
+            });
+        
+        return json_encode(array(["Message"=>'true',"OTP"=>$random_password]));    
+        
     }
 
 

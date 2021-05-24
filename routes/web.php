@@ -18,8 +18,14 @@ use Illuminate\Support\Facades\Route;
 Route::post('/api/sign_in','MobileController@sign_in');
 
 // QRCode Screen
-Route::get('/api/get_voucher_info','MobileController@get_voucher_info');
+Route::post('/api/get_voucher_info','MobileController@get_voucher_info');
 
+
+// Claim Voucher Screen
+Route::post('/api/submit-voucher','MobileController@submit_voucher');
+
+//OTP Screen
+Route::post('/api/resend-otp','MobileController@resendOTP');
 
 //  
 Route::resource('api','MobileController');
