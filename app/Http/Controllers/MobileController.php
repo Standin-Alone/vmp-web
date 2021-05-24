@@ -136,8 +136,10 @@ class MobileController extends Controller
         
        if(!$get_info->isEmpty()){
            // Compute the balance of voucher    
-            $get_voucher_amount = $this->vouchergen_model->where('REFERENCE_NO','DA566AB36L58O7M')->first()->AMOUNT;
-            $compute_commodities= $this->commodity_model->where('REFERENCE_NO','DA566AB36L58O7M')->sum('amount');
+        //    $get_voucher_amount = $this->vouchergen_model->where('REFERENCE_NO','DA566AB36L58O7M')->first()->AMOUNT;
+        //     $compute_commodities= $this->commodity_model->where('REFERENCE_NO','DA566AB36L58O7M')->sum('amount');
+            $get_voucher_amount = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->AMOUNT;
+            $compute_commodities= $this->commodity_model->where('REFERENCE_NO',$reference_num)->sum('amount');
             $check_balance = $get_voucher_amount - $compute_commodities;        
             $get_info[0]['Available_Balance'] = $check_balance;        
             return json_encode(array(["Message"=>'true',"data"=>$get_info]));    
@@ -149,7 +151,7 @@ class MobileController extends Controller
 
 
 
-     //  SUBMIT FUNCTION OF Claim Voucer
+    //  Submit Function of Claim Voucher
      public function submit_voucher(){
 
         $reference_num = request('reference_num');        
@@ -158,13 +160,24 @@ class MobileController extends Controller
         $decode = json_decode($commodities,true);
                 
 
-        
+        $store_commodities = '';
+        $get_voucher_gen = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first();
         // commodities
         foreach($decode as $item){
             $commodity = json_decode($item)->commodity;                        
+            $store_commodities = $this->commodity_model->fill([
+                'REFERENCE_NO' => $reference_num,
+                'RSBSA_CTRL_NO' => $get_voucher_gen->RSBSA_CTRL_NO,
+                'SUPPLIER_GROUP' => 1,
+                'SUPPLIER_GROUP' => 1,
+                'SUPPLIER_GROUP' => 1,
+                
+            
+
+                ])
         }
 
-
+        
         // upload image
         for($i = 0 ; $i < $images_count ; $i++){
             $image = request()->input('image'.$i);
