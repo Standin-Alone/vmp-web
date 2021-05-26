@@ -141,9 +141,9 @@ class MobileController extends Controller
         
        if(!$get_info->isEmpty()){
            // Compute the balance of voucher    
-            $get_voucher_amount = $this->vouchergen_model->where('REFERENCE_NO','DA566AB36L58O7M')->first()->AMOUNT;
-            $compute_commodities= $this->commodity_model->where('REFERENCE_NO','DA566AB36L58O7M')->sum('amount');
-            $check_balance = $get_voucher_amount - $compute_commodities;        
+            $get_voucher_amount = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->AMOUNT;
+            // $compute_commodities= $this->commodity_model->where('REFERENCE_NO','DA566AB36L58O7M')->sum('amount');
+            $check_balance = $get_voucher_amount;        
             $get_info[0]['Available_Balance'] = $check_balance;        
             return json_encode(array(["Message"=>'true',"data"=>$get_info]));    
         }else{
@@ -157,80 +157,95 @@ class MobileController extends Controller
      //  SUBMIT FUNCTION OF Claim Voucer
      public function submit_voucher(){
 
-        $reference_num = request('reference_num');        
-        $images_count = request('images_count');        
-        $commodities = json_encode(request('commodities'));
-        $decode = json_decode($commodities,true);
-        $rsbsa_ctrl_no = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->RSBSA_CTRL_NO;
+        try{
+       
+                $reference_num = request('reference_num');        
+                $images_count = request('images_count');        
+                $commodities = json_encode(request('commodities'));
+                $decode = json_decode($commodities,true);
+                $rsbsa_ctrl_no = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->RSBSA_CTRL_NO;
+                $current_balance =  $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->AMOUNT;
+                $update_current_balance = new VoucherGenModel();
+                
+                // store commodities
+                foreach($decode as $item){
+                    $decoded_item = json_decode($item);
 
+                    $store_commodities = new CommodityModel();
+                    
+
+                    $commodity = $decoded_item->commodity;                        
+                    $unit = $decoded_item->unit;                        
+                    $quantity = $decoded_item->quantity;                        
+                    $amount = $decoded_item->amount;                        
+                    $total_amount = $decoded_item->total_amount;                        
+                    
+                    
+                    $store_commodities = $store_commodities->fill([
+                        "commodity" =>  $commodity,
+                        "quantity" => $unit,
+                        "unit" => $quantity,                                            
+                        "amount" => $total_amount,
+                        "REFERENCE_NO" => $reference_num,
+                        "RSBSA_CTRL_NO" => $rsbsa_ctrl_no,
+                        "SUPPLIER_CODE" => 3,
+                        "SUPPLIER_GROUP" => 1
+                    ]);
+
+                    $store_commodities->save();                                
+                }
+
+                $commodities_total_amount= $this->commodity_model->where('REFERENCE_NO',$reference_num)->sum('amount');
+                $compute_balance = $current_balance - $commodities_total_amount;
+
+                $update_current_balance->where('REFERENCE_NO',$reference_num)->fill(
+                    [
+                        "Amount" => $compute_balance
+                    ]);
+                $update_current_balance->save();
+
+
+                $document_type_value = '';
+                
+                // upload and store 
+                for($i = 0 ; $i < $images_count ; $i++){
+                    $image = request()->input('image'.$i);
+                    $document_type = request('document_type'.$i);
+                    $image = str_replace('data:image/jpeg;base64,', '', $image);
+                    $image = str_replace(' ', '+', $image);
+                    $imageName = $reference_num .'_'.$i. '.jpeg';
+                    
+                    $store_attachments = new  AttachmentModel();
+
+                    if($document_type == 3)
+                        $document_type_value = 'Picture of other documents or attachments';
+                    else if ($document_type == 2)
+                        $document_type_value = 'Picture of ID Presented and Signature';
+                    else if ($document_type == 1 )
+                        $document_type_value = 'Picture of farmer holding interventions';
+
+
+                    $store_attachments = $store_attachments->fill([
+                            "att_file" =>  $imageName,
+                            "requirement" => $document_type,
+                            "filetitle" => $document_type_value,                                            
+                            "REFERENCE_NO" => $reference_num,
+                            "RSBSA_CTRL_NO" => $rsbsa_ctrl_no,
+                            "imglink" => URL::to('/').'//storage//'. '/uploads//'.$imageName,
+                            "supplier_code" => 3
+                    ]);
+
+                    $store_attachments->save();                    
+                    File::put(storage_path(). '/uploads//' . $imageName, base64_decode($image));            
+                }
+                
+
+                echo json_encode(array(["Message"=>'true']));
         
-        // commodities
-        foreach($decode as $item){
-            $decoded_item = json_decode($item);
 
-            $store_commodities = new CommodityModel();
-
-            $commodity = $decoded_item->commodity;                        
-            $unit = $decoded_item->unit;                        
-            $quantity = $decoded_item->quantity;                        
-            $amount = $decoded_item->amount;                        
-            $total_amount = $decoded_item->total_amount;                        
-
-            $store_commodities = $store_commodities->fill([
-                "commodity" =>  $commodity,
-                "quantity" => $unit,
-                "unit" => $quantity,                                            
-                "amount" => $amount,
-                "REFERENCE_NO" => $reference_num,
-                "RSBSA_CTRL_NO" => $rsbsa_ctrl_no,
-                "SUPPLIER_CODE" => 3,
-                "SUPPLIER_GROUP" => 1
-            ]);
-            
-            $store_commodities->save();
+        }catch(\Exception $e){
+            echo json_encode(array(["Message"=>$e]));
         }
-
-        $document_type_value = '';
-        // upload image
-        for($i = 0 ; $i < $images_count ; $i++){
-            $image = request()->input('image'.$i);
-            $document_type = request('document_type'.$i);
-            $image = str_replace('data:image/jpeg;base64,', '', $image);
-            $image = str_replace(' ', '+', $image);
-            $imageName = $reference_num .'_'.$i. '.jpeg';
-            
-            $store_attachments = new  AttachmentModel();
-
-            if($document_type == 3)
-                $document_type_value = 'Picture of other documents or attachments';
-            else if ($document_type == 2)
-                $document_type_value = 'Picture of ID Presented and Signature';
-            else if ($document_type == 1 )
-                $document_type_value = 'Picture of farmer holding interventions';
-
-
-            $store_attachments = $store_attachments->fill([
-                    "att_file" =>  $imageName,
-                    "requirement" => $document_type,
-                    "filetitle" => $document_type_value,                                            
-                    "REFERENCE_NO" => $reference_num,
-                    "RSBSA_CTRL_NO" => $rsbsa_ctrl_no,
-                    "imglink" => URL::to('/').'//storage//'. '/uploads//'.$imageName,
-                    "supplier_code" => 3
-            ]);
-
-            $store_attachments->save();                    
-            File::put(storage_path(). '/uploads//' . $imageName, base64_decode($image));            
-        }
-
-        
-        
-        
-        
-        
-        
-
-        
                         
     }
 
