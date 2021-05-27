@@ -18,6 +18,7 @@ class VerifyCsrfToken extends Middleware
         '/api/get_voucher_info',
         '/api/resend-otp',
         '/api/submit-voucher',
+        '/api/get-scanned-vouchers',
         'api'
     ];
 }

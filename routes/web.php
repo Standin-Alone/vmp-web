@@ -21,6 +21,9 @@ Route::post('/api/sign_in','MobileController@sign_in');
 Route::post('/api/get_voucher_info','MobileController@get_voucher_info');
 
 
+// Home Screen
+Route::post('/api/get-scanned-vouchers','MobileController@get_scanned_vouchers');
+
 // Claim Voucher Screen
 Route::post('/api/submit-voucher','MobileController@submit_voucher');
 

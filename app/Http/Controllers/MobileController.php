@@ -38,65 +38,8 @@ class MobileController extends Controller
         $this->attachment_model = $attachment_model;    
     }
 
-    public function index()
-    {
-        //
 
-        
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-        return json_encode(array('message'=>'sample'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-
+ 
 
     public function sign_in(Request $request)
     {
@@ -104,9 +47,13 @@ class MobileController extends Controller
 
         $username = request('username');
         $password = request('password');
-
+        $supplier_id = '';
         $authenticate = $this->user_model->where('username',$username)->where('password',md5($password))->get();
+        
+        // $distributor_id = $this->supplier_model->where('SUPPLIER_COMPANY_NAME',$authenticate->company_name)->first()->DISTRIBUTOR_ID;
+                            
         $random_password = mt_rand(1000,9999);
+        
 
                  
         $to_email = "";
@@ -114,6 +61,7 @@ class MobileController extends Controller
 
             foreach ($authenticate as $authenticate) {                 
                  $to_email=$this->supplier_model->where('SUPPLIER_COMPANY_NAME',$authenticate->company_name)->first()->COMPANY_EMAIL;
+                 $supplier_id = $this->supplier_model->where('SUPPLIER_COMPANY_NAME',$authenticate->company_name)->first()->id;
             }                
             
             Mail::send('otp', ["otp_code"=>$random_password], function ($message) use ($to_email,$random_password){
@@ -122,13 +70,23 @@ class MobileController extends Controller
                     ->from("webdeveloper01000@gmail.com");                  
               });
 
-            return json_encode(array(["Message"=>"true","OTP"=>$random_password,"EMAIL"=>$to_email]));
+            return json_encode(array(["Message"=>"true","OTP"=>$random_password,"EMAIL"=>$to_email,"SUPPLIER_ID" => $supplier_id]));
         }else{
             return json_encode(array(["Message"=>"false"]));
         }
 
     }
 
+    public function get_scanned_vouchers()
+    {
+        
+         
+        $supplier_id = request('supplier_Id');  
+        echo $supplier_id;
+
+
+
+    }
 
     public function get_voucher_info(Request $request)
     {
@@ -160,6 +118,7 @@ class MobileController extends Controller
         try{
        
                 $reference_num = request('reference_num');        
+                $supplier_id = request('supplier_id');        
                 $images_count = request('images_count');        
                 $commodities = json_encode(request('commodities'));
                 $decode = json_decode($commodities,true);
@@ -188,8 +147,10 @@ class MobileController extends Controller
                         "amount" => $total_amount,
                         "REFERENCE_NO" => $reference_num,
                         "RSBSA_CTRL_NO" => $rsbsa_ctrl_no,
+                        "DISTRIBUTOR_ID" => 1,
                         "SUPPLIER_CODE" => 3,
                         "SUPPLIER_GROUP" => 1
+                        
                     ]);
 
                     $store_commodities->save();                                
@@ -272,19 +233,5 @@ class MobileController extends Controller
 
 
 
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
+  
 }
