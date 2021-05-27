@@ -47,7 +47,7 @@ class MobileController extends Controller
 
         $username = request('username');
         $password = request('password');
-        $supplier_id = '';
+
         $authenticate = $this->user_model->where('username',$username)->where('password',md5($password))->get();
         
         // $distributor_id = $this->supplier_model->where('SUPPLIER_COMPANY_NAME',$authenticate->company_name)->first()->DISTRIBUTOR_ID;
@@ -58,7 +58,7 @@ class MobileController extends Controller
                  
         $to_email = "";
         if(!$authenticate->isEmpty()){
-
+            $supplier_id = '';
             foreach ($authenticate as $authenticate) {                 
                  $to_email=$this->supplier_model->where('SUPPLIER_COMPANY_NAME',$authenticate->company_name)->first()->COMPANY_EMAIL;
                  $supplier_id = $this->supplier_model->where('SUPPLIER_COMPANY_NAME',$authenticate->company_name)->first()->id;
@@ -81,9 +81,12 @@ class MobileController extends Controller
     {
         
          
-        $supplier_id = request('supplier_Id');  
-        echo $supplier_id;
+        $supplier_id = request('supplier_id');  
+        $get_scanned_vouchers = $this->vouchergen_model->where('SUPPLIER_CODE',$supplier_id)->Where('VOUCHER_STATUS','CLAIMED')->take(5)->get(['REFERENCE_NO','CLAIMED_DATE']);
+        
+// ->orWhere('VOUCHER_STATUS','NOT FULLY CLAIMED')
 
+        return json_encode($get_scanned_vouchers);
 
 
     }
