@@ -136,27 +136,27 @@ class MobileController extends Controller
                     $store_commodities = new CommodityModel();
                     
 
-                    $commodity = $decoded_item->commodity;                        
+                    $commodity = $decoded_item->commodity;
                     $unit = $decoded_item->unit;                        
                     $quantity = $decoded_item->quantity;                        
                     $amount = $decoded_item->amount;                        
                     $total_amount = $decoded_item->total_amount;                        
                     
-                    
-                    $store_commodities = $store_commodities->fill([
+                
+                    $store_commodities->fill([
                         "commodity" =>  $commodity,
-                        "quantity" => $unit,
-                        "unit" => $quantity,                                            
+                        "quantity" => $quantity,
+                        "unit" => $unit,                                            
                         "amount" => $total_amount,
                         "REFERENCE_NO" => $reference_num,
                         "RSBSA_CTRL_NO" => $rsbsa_ctrl_no,
-                        "DISTRIBUTOR_ID" => 1,
-                        "SUPPLIER_CODE" => 3,
-                        "SUPPLIER_GROUP" => 1
+                        "DISTRIBUTOR_ID" => $supplier_id,
+                        "SUPPLIER_CODE" => $supplier_id,
+                        "SUPPLIER_GROUP" => $supplier_id
                         
-                    ]);
+                    ])->save();
 
-                    $store_commodities->save();                                
+                                             
                 }
 
                 $commodities_total_amount= $this->commodity_model->where('REFERENCE_NO',$reference_num)->sum('amount');
@@ -165,8 +165,8 @@ class MobileController extends Controller
                 $update_current_balance->where('REFERENCE_NO',$reference_num)->fill(
                     [
                         "Amount" => $compute_balance
-                    ]);
-                $update_current_balance->save();
+                    ])->save();
+            
 
 
                 $document_type_value = '';
@@ -189,17 +189,18 @@ class MobileController extends Controller
                         $document_type_value = 'Picture of farmer holding interventions';
 
 
-                    $store_attachments = $store_attachments->fill([
+                     $store_attachments->fill([
                             "att_file" =>  $imageName,
                             "requirement" => $document_type,
                             "filetitle" => $document_type_value,                                            
                             "REFERENCE_NO" => $reference_num,
                             "RSBSA_CTRL_NO" => $rsbsa_ctrl_no,
                             "imglink" => URL::to('/').'//storage//'. '/uploads//'.$imageName,
-                            "supplier_code" => 3
-                    ]);
+                            "SUPPLIER_CODE" => $supplier_id,
+                            "DISTRIBUTOR_ID" => $supplier_id
+                    ])->save();
 
-                    $store_attachments->save();                    
+                    
                     File::put(storage_path(). '/uploads//' . $imageName, base64_decode($image));            
                 }
                 
@@ -208,7 +209,7 @@ class MobileController extends Controller
         
 
         }catch(\Exception $e){
-            echo json_encode(array(["Message"=>$e]));
+            echo json_encode(array(["Message"=>$e->getMessage()]));
         }
                         
     }
