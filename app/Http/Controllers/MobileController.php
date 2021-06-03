@@ -126,7 +126,7 @@ class MobileController extends Controller
                 $commodities = json_encode(request('commodities'));
                 $decode = json_decode($commodities,true);
                 $rsbsa_ctrl_no = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->RSBSA_CTRL_NO;
-                $current_balance =  $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->AMOUNT;
+                
                 $update_current_balance = new VoucherGenModel();
                 
                 // store commodities
@@ -158,14 +158,16 @@ class MobileController extends Controller
 
                                              
                 }
-
+                $compute_balance = 0;
                 $commodities_total_amount= $this->commodity_model->where('REFERENCE_NO',$reference_num)->sum('amount');
-                $compute_balance = $current_balance - $commodities_total_amount;
+                $current_balance =  $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->AMOUNT;
+                $compute_balance = $current_balance - $commodities_total_amount  ;
+                
 
-                $update_current_balance->where('REFERENCE_NO',$reference_num)->fill(
+                $update_current_balance->where('REFERENCE_NO',$reference_num)->update(
                     [
-                        "Amount" => $compute_balance
-                    ])->save();
+                        "AMOUNT" => $compute_balance
+                    ]);
             
 
 
@@ -209,7 +211,7 @@ class MobileController extends Controller
         
 
         }catch(\Exception $e){
-            echo json_encode(array(["Message"=>$e->getMessage()]));
+            echo json_encode(array(["Message"=>$e->getMessage(),"StatusCode" => $e->getCode()]));
         }
                         
     }

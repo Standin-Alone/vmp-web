@@ -10,4 +10,6 @@ class VoucherGenModel extends Model
     use HasFactory;
     protected $connection = "mysql2";
     protected $table = "tbl_voucher_gen";
+    public $timestamps = false;
+    protected $fillable = ['AMOUNT'];
 }
