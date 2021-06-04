@@ -128,7 +128,7 @@ class MobileController extends Controller
                 $rsbsa_ctrl_no = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->RSBSA_CTRL_NO;
                 
                 $update_current_balance = new VoucherGenModel();
-                
+                $commodities_total_amount = 0;
                 // store commodities
                 foreach($decode as $item){
                     $decoded_item = json_decode($item);
@@ -141,6 +141,8 @@ class MobileController extends Controller
                     $quantity = $decoded_item->quantity;                        
                     $amount = $decoded_item->amount;                        
                     $total_amount = $decoded_item->total_amount;                        
+
+                    $commodities_total_amount += $total_amount;
                     
                 
                     $store_commodities->fill([
@@ -159,7 +161,7 @@ class MobileController extends Controller
                                              
                 }
                 $compute_balance = 0;
-                $commodities_total_amount= $this->commodity_model->where('REFERENCE_NO',$reference_num)->sum('amount');
+                                                
                 $current_balance =  $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->AMOUNT;
                 $compute_balance = $current_balance - $commodities_total_amount  ;
                 
