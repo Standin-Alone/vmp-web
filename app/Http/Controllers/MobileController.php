@@ -235,7 +235,7 @@ class MobileController extends Controller
     public function resendOTP(){
 
         $email = request('email');
-        $random_password = mt_rand(1000,9999);
+        $random_password = mt_rand(100000,999999);
         
         Mail::send('otp', ["otp_code"=>$random_password], function ($message) use ($email,$random_password){
             $message->to($email)
