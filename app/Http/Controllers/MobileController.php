@@ -12,6 +12,8 @@ use App\Mail\OTPMail;
 use File;
 use Mail;
 use URL;
+use Carbon\Carbon;
+use DB;
 class MobileController extends Controller
 {
     /**
@@ -82,9 +84,9 @@ class MobileController extends Controller
         
          
         $supplier_id = request('supplier_id');  
-        $get_scanned_vouchers = $this->vouchergen_model->where('SUPPLIER_CODE',$supplier_id)->Where('VOUCHER_STATUS','CLAIMED')->take(5)->get(['REFERENCE_NO','CLAIMED_DATE']);
+        $get_scanned_vouchers = $this->vouchergen_model->where('SUPPLIER_CODE',$supplier_id)->Where('VOUCHER_STATUS','CLAIMED')->orderBy('CLAIMED_DATE','DESC')->get(['REFERENCE_NO', DB::raw('DATE(CLAIMED_DATE) as CLAIMED_DATE')]);
         
-// ->orWhere('VOUCHER_STATUS','NOT FULLY CLAIMED')
+            // ->orWhere('VOUCHER_STATUS','NOT FULLY CLAIMED')
 
         return json_encode($get_scanned_vouchers);
 
@@ -160,15 +162,21 @@ class MobileController extends Controller
 
                                              
                 }
+
+
+                
+
                 $compute_balance = 0;
                                                 
                 $current_balance =  $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->AMOUNT;
                 $compute_balance = $current_balance - $commodities_total_amount  ;
                 
-
+                $get_date = Carbon::now();
                 $update_current_balance->where('REFERENCE_NO',$reference_num)->update(
                     [
-                        "AMOUNT" => $compute_balance
+                        "AMOUNT" => $compute_balance,
+                        "VOUCHER_STATUS" => "CLAIMED",
+                        "CLAIMED_DATE" => $get_date->toDateTimeString(),
                     ]);
             
 
