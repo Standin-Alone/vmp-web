@@ -129,7 +129,7 @@ class MobileController extends Controller
                 $decode = json_decode($commodities,true);
                 $rsbsa_ctrl_no = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->RSBSA_CTRL_NO;
                 
-                $update_current_balance = new VoucherGenModel();
+                $update_voucher_gen = new VoucherGenModel();
                 $commodities_total_amount = 0;
                 // store commodities
                 foreach($decode as $item){
@@ -172,11 +172,12 @@ class MobileController extends Controller
                 $compute_balance = $current_balance - $commodities_total_amount  ;
                 
                 $get_date = Carbon::now();
-                $update_current_balance->where('REFERENCE_NO',$reference_num)->update(
+                $update_voucher_gen->where('REFERENCE_NO',$reference_num)->update(
                     [
                         "AMOUNT" => $compute_balance,
                         "VOUCHER_STATUS" => "CLAIMED",
                         "CLAIMED_DATE" => $get_date->toDateTimeString(),
+                        "SUPPLIER_CODE" => $supplier_id,
                     ]);
             
 
