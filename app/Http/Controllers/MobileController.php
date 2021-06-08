@@ -84,7 +84,12 @@ class MobileController extends Controller
         
          
         $supplier_id = request('supplier_id');  
-        $get_scanned_vouchers = $this->vouchergen_model->where('SUPPLIER_CODE',$supplier_id)->Where('VOUCHER_STATUS','CLAIMED')->orderBy('CLAIMED_DATE','DESC')->get(['REFERENCE_NO', DB::raw('DATE(CLAIMED_DATE) as CLAIMED_DATE'), DB::raw("CONCAT(INFO_NAME_F,' ',INFO_NAME_M,' ',INFO_NAME_L) as NAME")]);
+        $get_scanned_vouchers = $this->vouchergen_model->where('SUPPLIER_CODE',$supplier_id)
+                                                        ->Where('VOUCHER_STATUS','CLAIMED')
+                                                        ->orderBy('CLAIMED_DATE','DESC')
+                                                        ->get(['REFERENCE_NO', DB::raw('DATE(CLAIMED_DATE) as CLAIMED_DATE'), DB::raw("CONCAT(INFO_NAME_F,' ',INFO_NAME_M,' ',INFO_NAME_L) as NAME")]);
+        
+        
         
             // ->orWhere('VOUCHER_STATUS','NOT FULLY CLAIMED')
 
