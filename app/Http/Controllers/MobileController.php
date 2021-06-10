@@ -54,7 +54,7 @@ class MobileController extends Controller
         
         // $distributor_id = $this->supplier_model->where('SUPPLIER_COMPANY_NAME',$authenticate->company_name)->first()->DISTRIBUTOR_ID;
                             
-        $random_password = mt_rand(1000,9999);
+        $random_password = mt_rand(100000,999999);
         
 
                  
