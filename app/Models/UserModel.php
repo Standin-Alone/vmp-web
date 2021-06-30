@@ -9,7 +9,7 @@ class UserModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'fims_account';
+    protected $table = 'users';
 
     
 }

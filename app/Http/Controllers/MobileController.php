@@ -62,8 +62,8 @@ class MobileController extends Controller
         if(!$authenticate->isEmpty()){
             $supplier_id = '';
             foreach ($authenticate as $authenticate) {                 
-                 $to_email=$this->supplier_model->where('SUPPLIER_COMPANY_NAME',$authenticate->company_name)->first()->COMPANY_EMAIL;
-                 $supplier_id = $this->supplier_model->where('SUPPLIER_COMPANY_NAME',$authenticate->company_name)->first()->id;
+                 $to_email=$authenticate->first()->email;
+                 $supplier_id = $this->supplier_model->where('email',$authenticate->email)->first()->supplier_id;
             }                
             
             Mail::send('otp', ["otp_code"=>$random_password], function ($message) use ($to_email,$random_password){

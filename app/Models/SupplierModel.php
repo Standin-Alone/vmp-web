@@ -9,6 +9,7 @@ class SupplierModel extends Model
 {
     use HasFactory;
 
-    protected $connection = "mysql2";
-    protected $table = "tbl_supplier";
+    // protected $connection = "mysql2";
+    protected $table = "supplier";
+    protected $primaryKey = 'supplier_id';
 }
