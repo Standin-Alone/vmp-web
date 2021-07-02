@@ -85,7 +85,7 @@ class MobileController extends Controller
          
         $supplier_id = request('supplier_id');  
         $get_scanned_vouchers = $this->vouchergen_model->where('SUPPLIER_CODE',$supplier_id)
-                                                        ->Where('VOUCHER_STATUS','CLAIMED')
+                                                        ->Where('voucher_status','CLAIMED')
                                                         ->orderBy('CLAIMED_DATE','DESC')
                                                         ->get(['REFERENCE_NO', DB::raw('DATE(CLAIMED_DATE) as CLAIMED_DATE'), DB::raw("CONCAT(INFO_NAME_F,' ',INFO_NAME_M,' ',INFO_NAME_L) as NAME")]);
         
@@ -104,15 +104,34 @@ class MobileController extends Controller
 
         $reference_num = request('reference_num');        
         
-        $get_info = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->get();
+        $get_info = $this->vouchergen_model->where('reference_no',$reference_num)->get();
         
         
-       if(!$get_info->isEmpty()){
+    if(!$get_info->isEmpty()){
            // Compute the balance of voucher    
-            $get_voucher_amount = $this->vouchergen_model->where('REFERENCE_NO',$reference_num)->first()->AMOUNT;
+            $get_voucher = $this->vouchergen_model->where('reference_no',$reference_num)->first();
+
+            $get_region = $get_voucher->reg;
+            $get_province = $get_voucher->prv;
+            $get_municipality = $get_voucher->mun;            
+            $get_brgy = $get_voucher->brgy;
+
+
+            $get_geo_map =  DB::table('geo_map')
+                                ->where('reg_code',$get_region)
+                                ->where('prov_code',$get_province)
+                                ->where('mun_code',$get_municipality)
+                                ->where('bgy_code',$get_brgy)
+                                ->first();
             // $compute_commodities= $this->commodity_model->where('REFERENCE_NO','DA566AB36L58O7M')->sum('amount');
-            $check_balance = $get_voucher_amount;        
+            $check_balance = $get_voucher->amount;        
             $get_info[0]['Available_Balance'] = $check_balance;        
+
+            $get_info[0]['Region'] = $get_geo_map->reg_name;        
+            $get_info[0]['Province'] = $get_geo_map->prov_name;        
+            $get_info[0]['Municipality'] = $get_geo_map->mun_name;        
+            $get_info[0]['Barangay'] = $get_geo_map->bgy_name;        
+
             return json_encode(array(["Message"=>'true',"data"=>$get_info]));    
         }else{
             return json_encode(array(["Message"=>'false']));    
@@ -148,10 +167,9 @@ class MobileController extends Controller
                     $quantity = $decoded_item->quantity;                        
                     $amount = $decoded_item->amount;                        
                     $total_amount = $decoded_item->total_amount;                        
-
+    
                     $commodities_total_amount += $total_amount;
-                    
-                
+                                    
                     $store_commodities->fill([
                         "commodity" =>  $commodity,
                         "quantity" => $quantity,
