@@ -111,6 +111,7 @@ class MobileController extends Controller
            // Compute the balance of voucher    
             $get_voucher = $this->vouchergen_model->where('reference_no',$reference_num)->first();
 
+      
             $get_region = $get_voucher->reg;
             $get_province = $get_voucher->prv;
             $get_municipality = $get_voucher->mun;            
@@ -132,7 +133,8 @@ class MobileController extends Controller
             $get_info[0]['Municipality'] = $get_geo_map->mun_name;        
             $get_info[0]['Barangay'] = $get_geo_map->bgy_name;        
 
-            return json_encode(array(["Message"=>'true',"data"=>$get_info]));    
+            $get_program_items = $this->getProgramItems();
+            return json_encode(array(["Message"=>'true',"data"=>$get_info,"program_items"=>$get_program_items]));    
         }else{
             return json_encode(array(["Message"=>'false']));    
         }
@@ -263,7 +265,7 @@ class MobileController extends Controller
         
         Mail::send('otp', ["otp_code"=>$random_password], function ($message) use ($email,$random_password){
             $message->to($email)
-                ->subject('VMP Mobile OTP')                                                     
+                ->subject('DA VMP Mobile')                                                     
                 ->from("webdeveloper01000@gmail.com");                  
             });
         
@@ -271,6 +273,25 @@ class MobileController extends Controller
         
     }
 
+    public function getProgramItems(){
+
+
+
+        $get_record = db::table('program_items as pi')
+                            ->join('supplier_programs as sp','pi.item_id','sp.item_id')
+                            ->where('supplier_id','d348516e-b7d0-4712-8e65-a2cb75071e5f')
+                            ->get();
+
+        foreach($get_record as $key => $item){
+            $item->base64 = base64_encode(file_get_contents(storage_path('/commodities//' .$item->item_profile)));
+            
+        }
+        return $get_record;
+
+        }
+
+
+    
 
 
   

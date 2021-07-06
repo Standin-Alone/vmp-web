@@ -30,8 +30,10 @@ Route::post('/api/submit-voucher','MobileController@submit_voucher');
 //OTP Screen
 Route::post('/api/resend-otp','MobileController@resendOTP');
 
+Route::get('/api/get-items','MobileController@getProgramItems');
 //  
 Route::resource('api','MobileController');
 Route::get('/otp','MobileController@otp');
+
 
 
