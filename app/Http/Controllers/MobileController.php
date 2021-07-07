@@ -63,7 +63,9 @@ class MobileController extends Controller
             $supplier_id = '';
             foreach ($authenticate as $authenticate) {                 
                  $to_email=$authenticate->first()->email;
-                 $supplier_id = $this->supplier_model->where('email',$authenticate->email)->first()->supplier_id;
+                 $supplier_id = db::table('program_permissions as pp')
+                                    ->join('supplier as s','s.supplier_id','pp.other_info')                                    
+                                    ->where('user_id',$authenticate->user_id)->first()->supplier_id;
             }                
             
             Mail::send('otp', ["otp_code"=>$random_password], function ($message) use ($to_email,$random_password){
@@ -249,7 +251,7 @@ class MobileController extends Controller
         }catch(\Exception $e){
             echo json_encode(array(["Message"=>$e->getMessage(),"StatusCode" => $e->getCode()]));
         }
-                        
+        
     }
 
     public function otp()
