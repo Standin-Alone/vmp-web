@@ -276,7 +276,20 @@ class MobileController extends Controller
             $voucher_info = json_decode(request('voucher_info'));
             $commodity = json_decode(request('commodity'));       
             $attachments = json_decode(request('attachments'));        
-            
+               // insert to voucher transaction table
+            $get_voucher_details_id = db::table('voucher_transaction')->insertGetId(
+                                                            [
+                                                                'voucher_details_id' => $uuid,
+                                                                'reference_no' => $voucher_info->reference_no,
+                                                                'supplier_id' => $voucher_info->supplier_id,
+                                                                'sub_program_id' => $commodity->sub_id,
+                                                                'fund_id' =>  $voucher_info->fund_id,
+                                                                'quantity' =>  $commodity->quantity,
+                                                                'amount' =>  $commodity->fertilizer_amount,
+                                                                'total_amount' =>  $commodity->total_amount,                                                                
+                                                                'transac_by_id' =>  $voucher_info->supplier_id, 
+                                                                'transac_by_fullname' =>  $voucher_info->full_name, 
+                                                            ]);
 
             foreach($attachments as $item){
                 $image = $item->file;
@@ -295,20 +308,7 @@ class MobileController extends Controller
                 }
                 
             }
-            // insert to voucher transaction table
-            $get_voucher_details_id =db::table('voucher_transaction')->insertGetId(
-                                                            [
-                                                                'voucher_details_id' => $uuid,
-                                                                'reference_no' => $voucher_info->reference_no,
-                                                                'supplier_id' => $voucher_info->supplier_id,
-                                                                'sub_program_id' => $commodity->sub_id,
-                                                                'fund_id' =>  $voucher_info->fund_id,
-                                                                'quantity' =>  $commodity->quantity,
-                                                                'amount' =>  $commodity->fertilizer_amount,
-                                                                'total_amount' =>  $commodity->total_amount,                                                                
-                                                                'transac_by_id' =>  $voucher_info->supplier_id, 
-                                                                'transac_by_fullname' =>  $voucher_info->full_name, 
-                                                            ]);
+         
             $compute_remaining_bal = $voucher_info->current_balance - $commodity->total_amount;
             // update  voucher gen table amount_val
             db::table('voucher')
