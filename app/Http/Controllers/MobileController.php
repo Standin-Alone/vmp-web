@@ -275,8 +275,9 @@ class MobileController extends Controller
             $uuid = Uuid::uuid4();
             $voucher_info = json_decode(request('voucher_info'));
             $commodity = json_decode(request('commodity'));       
-            $attachments = json_decode(request('attachments'));        
-               // insert to voucher transaction table
+            $attachments = json_decode(request('attachments'));   
+
+            // insert to voucher transaction table
             $get_voucher_details_id = db::table('voucher_transaction')->insertGetId(
                                                             [
                                                                 'voucher_details_id' => $uuid,
@@ -290,25 +291,81 @@ class MobileController extends Controller
                                                                 'transac_by_id' =>  $voucher_info->supplier_id, 
                                                                 'transac_by_fullname' =>  $voucher_info->full_name, 
                                                             ]);
-
+            // upload attachments to file server 
             foreach($attachments as $item){
-                $image = $item->file;
-                $image = str_replace('data:image/jpeg;base64,', '', $image);
-                $image = str_replace(' ', '+', $image);
-                $imageName = $voucher_info->reference_no.'-'. $item->name. '.jpeg';
-
-                $upload_folder  = storage_path().'/attachments//'. $voucher_info->reference_no;
+                // insert attachment data to database
                 
-                // Check Folder if exist for farmers attachment;
-                if(!File::isDirectory($upload_folder)){
-                    File::makeDirectory($upload_folder, 0777, true);
-                    File::put($upload_folder .'/'. $imageName, base64_decode($image));
+                if($item->name == 'Valid ID'){
+                    $id_front = $item->file[0]->front;
+                    $id_back = $item->file[0]->back;
+
+                
+
+                    // front page of id 
+                    $id_front = str_replace('data:image/jpeg;base64,', '', $id_front);
+                    $id_front = str_replace(' ', '+', $id_front);
+                    $id_front_name = $voucher_info->reference_no.'-'. $item->name.'(front)'. '.jpeg';
+
+                    // back page of id
+                    $id_back = str_replace('data:image/jpeg;base64,', '', $id_back);
+                    $id_back = str_replace(' ', '+', $id_back);
+                    $id_back_name = $voucher_info->reference_no.'-'. $item->name.'(back)'. '.jpeg';
+
+                    $upload_folder  = storage_path().'/attachments//'. $voucher_info->reference_no;
+                    
+                    // insert front page of id in database
+                    db::table('voucher_attachments')->insert([
+                        'voucher_id' => $get_voucher_details_id,
+                        'document' => $item->name,
+                        'file_name' => $id_front_name,
+                    ]);
+
+                    // insert back page of id in database
+                    db::table('voucher_attachments')->insert([
+                        'voucher_id' => $get_voucher_details_id,
+                        'document' => $item->name,
+                        'file_name' => $id_back_name,
+                    ]);
+                    
+                    // Check Folder if exist for farmers attachment;
+                    if(!File::isDirectory($upload_folder)){
+                        File::makeDirectory($upload_folder, 0777, true);
+                        File::put($upload_folder .'/'. $id_front_name, base64_decode($id_front));
+                        File::put($upload_folder .'/'. $id_back_name, base64_decode($id_back));
+                    }else{
+                        File::put($upload_folder .'/'. $id_front_name, base64_decode($id_front));
+                        File::put($upload_folder .'/'. $id_back_name, base64_decode($id_back));
+                    }                    
+
                 }else{
-                    File::put($upload_folder .'/'. $imageName, base64_decode($image));
+
+                    $image = $item->file;
+
+                    $image = str_replace('data:image/jpeg;base64,', '', $image);
+                    $image = str_replace(' ', '+', $image);
+                    $imageName = $voucher_info->reference_no.'-'. $item->name. '.jpeg';
+
+                    $upload_folder  = storage_path().'/attachments//'. $voucher_info->reference_no;
+                    
+                    // insert pictures in database
+                    db::table('voucher_attachments')->insert([
+                        'voucher_id' => $get_voucher_details_id,
+                        'document' => $item->name,
+                        'file_name' => $imageName,
+                    ]);
+                    // Check Folder if exist for farmers attachment;
+                    if(!File::isDirectory($upload_folder)){
+                        File::makeDirectory($upload_folder, 0777, true);
+                        File::put($upload_folder .'/'. $imageName, base64_decode($image));
+                    }else{
+                        File::put($upload_folder .'/'. $imageName, base64_decode($image));
+                    }
+
                 }
                 
             }
-         
+            
+         //  compute remaining balance
             $compute_remaining_bal = $voucher_info->current_balance - $commodity->total_amount;
             // update  voucher gen table amount_val
             db::table('voucher')
@@ -354,8 +411,6 @@ class MobileController extends Controller
 
         }
 
-
-    
 
 
   
