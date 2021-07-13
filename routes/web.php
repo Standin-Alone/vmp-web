@@ -22,7 +22,7 @@ Route::post('/api/get_voucher_info','MobileController@get_voucher_info');
 
 
 // Home Screen
-Route::post('/api/get-scanned-vouchers','MobileController@get_scanned_vouchers');
+Route::get('/api/get-scanned-vouchers/{supplier_id}','MobileController@get_scanned_vouchers');
 
 // Attachment Screen Claim Voucher (RRP)
 Route::post('/api/submit-voucher-rrp','MobileController@submit_voucher_rrp');
